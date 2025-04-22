@@ -232,13 +232,30 @@ body {
 h2 {
   font-size: 2.5rem;
 }
+.project-list::-webkit-scrollbar {
+  height: 8px;
+}
+.project-list::-webkit-scrollbar-thumb {
+  background-color: #ccc;
+  border-radius: 4px;
+}
+
+
+.project-list {
+  display: flex;
+  flex-wrap: nowrap; /* Prevents wrapping */
+  overflow-x: auto; /* Enables horizontal scrolling if needed */
+  gap: 20px;
+  padding: 40px 0;
+}
 
 .project-card {
+  flex: 0 0 300px; /* Fixed width, won't shrink */
   background-color: white;
   border-radius: 10px;
   padding: 20px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  margin-bottom: 20px;
+  margin: 0;
 }
 
 .project-card h3 {
@@ -257,6 +274,7 @@ h2 {
   padding: 10px 20px;
   text-decoration: none;
   border-radius: 5px;
+  display: inline-block;
 }
 
 .project-card .btn:hover {
