@@ -1,0 +1,109 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Liste des Projets</title>
+  <link rel="stylesheet" href="{% static 'css/style.css' %}">
+</head>
+<body>
+
+  <nav class="navbar">
+    <div class="container">
+      <h1 class="logo">ProManage</h1>
+      <ul class="nav-links">
+        <li><a href="{% url 'home' %}">Accueil</a></li>
+        <li><a href="{% url 'projects' %}">Projets</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <header class="hero small">
+    <div class="container">
+      <h2>Vos projets</h2>
+      <p>Visualisez et gérez tous vos projets ici.</p>
+    </div>
+  </header>
+
+  <main class="container">
+    <section class="project-list">
+
+      <!-- Project 1 -->
+      <div class="project-card expandable">
+        <input type="checkbox" id="project1-toggle" class="toggle">
+        <label for="project1-toggle">
+          <h3>Refonte du site web</h3>
+          <p>Cliquez pour voir les détails du projet</p>
+        </label>
+        <div class="details">
+          <div class="sub-card">
+            <h4>Étape 1</h4>
+            <p>Analyse de l’ancienne interface et collecte des retours utilisateurs.</p>
+          </div>
+          <div class="sub-card">
+            <h4>Étape 2</h4>
+            <p>Maquettage Figma avec nouvelle charte graphique.</p>
+          </div>
+          <div class="sub-card">
+            <h4>Étape 3</h4>
+            <p>Intégration HTML/CSS responsive et test utilisateur.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Project 2 -->
+      <div class="project-card expandable">
+        <input type="checkbox" id="project2-toggle" class="toggle">
+        <label for="project2-toggle">
+          <h3>Développement d'une App Mobile</h3>
+          <p>Cliquez pour voir les détails du projet</p>
+        </label>
+        <div class="details">
+          <div class="sub-card">
+            <h4>Étape 1</h4>
+            <p>Définition des besoins et choix de la stack technique.</p>
+          </div>
+          <div class="sub-card">
+            <h4>Étape 2</h4>
+            <p>Développement Flutter + intégration Firebase Auth.</p>
+          </div>
+          <div class="sub-card">
+            <h4>Étape 3</h4>
+            <p>Test sur appareils physiques et déploiement sur Play Store.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Project 3 -->
+      <div class="project-card expandable">
+        <input type="checkbox" id="project3-toggle" class="toggle">
+        <label for="project3-toggle">
+          <h3>Campagne Marketing 2025</h3>
+          <p>Cliquez pour voir les détails du projet</p>
+        </label>
+        <div class="details">
+          <div class="sub-card">
+            <h4>Étape 1</h4>
+            <p>Création de contenus visuels et stratégie réseaux sociaux.</p>
+          </div>
+          <div class="sub-card">
+            <h4>Étape 2</h4>
+            <p>Lancement de campagnes sponsorisées sur Facebook/Instagram.</p>
+          </div>
+          <div class="sub-card">
+            <h4>Étape 3</h4>
+            <p>Analyse des performances via Google Analytics et adaptation.</p>
+          </div>
+        </div>
+      </div>
+
+    </section>
+  </main>
+
+  <footer>
+    <p>&copy; 2025 - Créé par Amal&Salma</p>
+  </footer>
+
+</body>
+</html>

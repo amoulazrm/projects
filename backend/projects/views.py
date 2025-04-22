@@ -12,3 +12,5 @@ class TaskViewSet(viewsets.ModelViewSet):
     serializer_class = TaskSerializer
 def home(request):
     return render(request, 'home.html')
+def projects(request):
+    return render(request, 'projects.html')
