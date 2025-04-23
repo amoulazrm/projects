@@ -3,5 +3,5 @@ from . import views
 
 urlpatterns = [
     path('', views.home, name='home'),
-    path('projects/', views.projects, name='projects'),  # <-- this is new
+    path('projects/', views.projects, name='projects'),
 ]
