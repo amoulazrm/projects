@@ -1,7 +1,16 @@
-import { NextResponse } from "next/server"
-import { logout } from "@/lib/auth"
+import { NextResponse } from 'next/server'
+import { cookies } from 'next/headers'
 
-export async function GET() {
-  await logout()
-  return NextResponse.redirect(new URL("/", process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"))
+export async function POST() {
+  try {
+    // Clear the auth token cookie
+    cookies().delete('auth_token')
+    
+    return NextResponse.json({ message: 'Logged out successfully' })
+  } catch (error) {
+    return NextResponse.json(
+      { error: 'Failed to logout' },
+      { status: 500 }
+    )
+  }
 }

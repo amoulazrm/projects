@@ -1,7 +1,6 @@
 "use client"
 
 import type React from "react"
-
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
@@ -10,8 +9,15 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { createProject, updateProject } from "@/lib/api"
-import { useToast } from "@/components/ui/use-toast"
-import type { Project } from "@/lib/types"
+import { toast } from "sonner"
+import type { Project, ProjectFormData } from "@/lib/types"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 
 interface ProjectFormProps {
   project?: Project
@@ -19,13 +25,27 @@ interface ProjectFormProps {
 }
 
 export function ProjectForm({ project, isEditing = false }: ProjectFormProps) {
-  const [title, setTitle] = useState(project?.title || "")
-  const [description, setDescription] = useState(project?.description || "")
-  const [url, setUrl] = useState(project?.url || "")
-  const [image, setImage] = useState(project?.image || "")
+  const [formData, setFormData] = useState<ProjectFormData>({
+    title: project?.title || "",
+    description: project?.description || "",
+    start_date: project?.start_date || "",
+    end_date: project?.end_date || "",
+    status: project?.status || "not_started",
+    progress: project?.progress || 0,
+  })
   const [isLoading, setIsLoading] = useState(false)
   const router = useRouter()
-  const { toast } = useToast()
+
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
+    const { name, value } = e.target
+    setFormData((prev) => ({ ...prev, [name]: value }))
+  }
+
+  const handleSelectChange = (name: string, value: string) => {
+    setFormData((prev) => ({ ...prev, [name]: value }))
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -33,99 +53,122 @@ export function ProjectForm({ project, isEditing = false }: ProjectFormProps) {
 
     try {
       if (isEditing && project) {
-        await updateProject(project.id, {
-          title,
-          description,
-          url,
-          image,
-        })
-        toast({
-          title: "Success",
-          description: "Project updated successfully.",
-        })
+        await updateProject(project.id, formData)
+        toast.success("Project updated successfully")
       } else {
-        await createProject({
-          title,
-          description,
-          url,
-          image,
-        })
-        toast({
-          title: "Success",
-          description: "Project created successfully.",
-        })
+        await createProject(formData)
+        toast.success("Project created successfully")
       }
-      router.push("/dashboard")
+      router.push("/dashboard/projects")
       router.refresh()
     } catch (error) {
-      toast({
-        title: "Error",
-        description: isEditing
+      toast.error(
+        isEditing
           ? "Failed to update project. Please try again."
-          : "Failed to create project. Please try again.",
-        variant: "destructive",
-      })
+          : "Failed to create project. Please try again."
+      )
     } finally {
       setIsLoading(false)
     }
   }
 
   return (
-    <Card>
+    <Card className="bg-secondary border-border">
       <CardHeader>
-        <CardTitle>{isEditing ? "Edit Project" : "Create New Project"}</CardTitle>
+        <CardTitle className="text-primary">{isEditing ? "Edit Project" : "Create New Project"}</CardTitle>
       </CardHeader>
       <form onSubmit={handleSubmit}>
         <CardContent className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="title">Title</Label>
+            <Label htmlFor="title" className="text-foreground">Title</Label>
             <Input
               id="title"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
+              name="title"
+              value={formData.title}
+              onChange={handleChange}
               required
               placeholder="Project Title"
+              className="bg-input text-foreground border-border"
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="description">Description</Label>
+            <Label htmlFor="description" className="text-foreground">Description</Label>
             <Textarea
               id="description"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
+              name="description"
+              value={formData.description}
+              onChange={handleChange}
               required
               placeholder="Describe your project"
               rows={5}
+              className="bg-input text-foreground border-border"
+            />
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+          <div className="space-y-2">
+              <Label htmlFor="start_date" className="text-foreground">Start Date</Label>
+            <Input
+                id="start_date"
+                name="start_date"
+                type="date"
+                value={formData.start_date}
+                onChange={handleChange}
+                required
+                className="bg-input text-foreground border-border"
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="url">Project URL (optional)</Label>
-            <Input
-              id="url"
-              type="url"
-              value={url}
-              onChange={(e) => setUrl(e.target.value)}
-              placeholder="https://example.com"
-            />
+              <Label htmlFor="end_date" className="text-foreground">End Date</Label>
+              <Input
+                id="end_date"
+                name="end_date"
+                type="date"
+                value={formData.end_date}
+                onChange={handleChange}
+                required
+                className="bg-input text-foreground border-border"
+              />
+            </div>
           </div>
-          <div className="space-y-2">
-            <Label htmlFor="image">Image URL (optional)</Label>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="status" className="text-foreground">Status</Label>
+              <Select 
+                value={formData.status} 
+                onValueChange={(value) => handleSelectChange("status", value)}
+              >
+                <SelectTrigger className="bg-input text-foreground border-border">
+                  <SelectValue placeholder="Select status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="not_started">Not Started</SelectItem>
+                  <SelectItem value="in_progress">In Progress</SelectItem>
+                  <SelectItem value="completed">Completed</SelectItem>
+                  <SelectItem value="on_hold">On Hold</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="progress" className="text-foreground">Progress</Label>
             <Input
-              id="image"
-              value={image}
-              onChange={(e) => setImage(e.target.value)}
-              placeholder="https://example.com/image.jpg"
-            />
-            <p className="text-sm text-gray-500">
-              Enter a URL for your project image. In a production app, you would have an image upload feature here.
-            </p>
+                id="progress"
+                name="progress"
+                type="number"
+                min="0"
+                max="100"
+                value={formData.progress}
+                onChange={handleChange}
+                required
+                className="bg-input text-foreground border-border"
+              />
+            </div>
           </div>
         </CardContent>
         <CardFooter className="flex justify-between">
-          <Button type="button" variant="outline" onClick={() => router.back()} disabled={isLoading}>
+          <Button type="button" variant="outline" onClick={() => router.back()} disabled={isLoading} className="border-border text-foreground hover:bg-secondary">
             Cancel
           </Button>
-          <Button type="submit" disabled={isLoading}>
+          <Button type="submit" disabled={isLoading} className="bg-primary text-primary-foreground hover:bg-primary/90">
             {isLoading ? (isEditing ? "Updating..." : "Creating...") : isEditing ? "Update Project" : "Create Project"}
           </Button>
         </CardFooter>

@@ -1,15 +1,15 @@
-import type React from "react"
-import { Inter } from "next/font/google"
-import { ThemeProvider } from "@/components/theme-provider"
-import { Toaster } from "@/components/ui/toaster"
-import "./globals.css"
+import type { Metadata } from 'next'
+import { Inter } from 'next/font/google'
+import './globals.css'
+import { ThemeProvider } from '@/components/theme-provider'
+import { AuthProvider } from '@/lib/auth-context'
+import { ErrorBoundary } from '@/components/error-boundary'
 
-const inter = Inter({ subsets: ["latin"] })
+const inter = Inter({ subsets: ['latin'] })
 
-export const metadata = {
-  title: "Projects Portfolio",
-  description: "A professional portfolio of projects",
-    generator: 'v0.dev'
+export const metadata: Metadata = {
+  title: 'ProjectHub - Project Management Made Simple',
+  description: 'Streamline your workflow, collaborate with your team, and deliver projects on time with our intuitive project management platform.',
 }
 
 export default function RootLayout({
@@ -20,10 +20,18 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={inter.className}>
-        <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
+        <ErrorBoundary>
+          <ThemeProvider
+            attribute="class"
+            defaultTheme="system"
+            enableSystem
+            disableTransitionOnChange
+          >
+            <AuthProvider>
           {children}
-          <Toaster />
+            </AuthProvider>
         </ThemeProvider>
+        </ErrorBoundary>
       </body>
     </html>
   )

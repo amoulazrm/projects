@@ -1,101 +1,140 @@
-import { redirect } from "next/navigation"
-import { getSession } from "@/lib/auth"
-import { getUserProjects } from "@/lib/api"
-import Link from "next/link"
-import { Button } from "@/components/ui/button"
-import { ProjectCard } from "@/components/project-card"
-import { PlusIcon } from "lucide-react"
+"use client"
 
-export default async function DashboardPage() {
-  const session = await getSession()
+import { useEffect, useState } from "react"
+import { Card } from "@/components/ui/card"
+import { useAuth } from "@/lib/auth-context"
+import { getDashboardStats, getProjects, getTasks } from "@/lib/api"
+import { DashboardStats, Project, Task } from "@/lib/types"
+import { toast } from "sonner"
 
-  if (!session) {
-    redirect("/auth/login")
+export default function DashboardPage() {
+  const { user } = useAuth()
+  const [stats, setStats] = useState<DashboardStats | null>(null)
+  const [recentProjects, setRecentProjects] = useState<Project[]>([])
+  const [recentTasks, setRecentTasks] = useState<Task[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    const fetchDashboardData = async () => {
+      try {
+        const [statsData, projectsData, tasksData] = await Promise.all([
+          getDashboardStats(),
+          getProjects({ limit: 5 }),
+          getTasks({ limit: 5 }),
+        ])
+
+        setStats(statsData)
+        setRecentProjects(projectsData?.results || [])
+        setRecentTasks(tasksData?.results || [])
+      } catch (error) {
+        toast.error("Failed to load dashboard data")
+        console.error(error)
+        setRecentProjects([])
+        setRecentTasks([])
+      } finally {
+        setLoading(false)
+  }
+    }
+
+    fetchDashboardData()
+  }, [])
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
+    )
   }
 
-  const projects = await getUserProjects()
-
   return (
-    <div className="flex min-h-screen flex-col">
-      <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className="container flex h-16 items-center justify-between">
-          <Link href="/" className="font-bold text-xl">
-            Portfolio
-          </Link>
-          <nav className="flex items-center gap-4">
-            <Link href="/projects">
-              <Button variant="ghost">Projects</Button>
-            </Link>
-            <Link href="/dashboard">
-              <Button variant="ghost">Dashboard</Button>
-            </Link>
-            <Link href="/api/auth/logout">
-              <Button variant="outline">Logout</Button>
-            </Link>
-          </nav>
+    <div className="space-y-6 p-6">
+      <div className="flex items-center justify-between">
+        <h1 className="text-3xl font-bold">Welcome back, {user?.first_name}!</h1>
+      </div>
+
+      {/* Stats Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <Card className="p-6">
+          <h3 className="text-sm font-medium text-muted-foreground">Total Projects</h3>
+          <p className="text-2xl font-bold mt-2">{stats?.total_projects || 0}</p>
+        </Card>
+        <Card className="p-6">
+          <h3 className="text-sm font-medium text-muted-foreground">Total Tasks</h3>
+          <p className="text-2xl font-bold mt-2">{stats?.total_tasks || 0}</p>
+        </Card>
+        <Card className="p-6">
+          <h3 className="text-sm font-medium text-muted-foreground">Team Members</h3>
+          <p className="text-2xl font-bold mt-2">{stats?.total_team_members || 0}</p>
+        </Card>
+        <Card className="p-6">
+          <h3 className="text-sm font-medium text-muted-foreground">Pending Tasks</h3>
+          <p className="text-2xl font-bold mt-2">{stats?.pending_tasks || 0}</p>
+        </Card>
+      </div>
+
+      {/* Recent Projects */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <Card className="p-6">
+          <h2 className="text-xl font-semibold mb-4">Recent Projects</h2>
+          <div className="space-y-4">
+            {(recentProjects || []).map((project) => (
+              <div key={project.id} className="flex items-center justify-between">
+                <div>
+                  <h3 className="font-medium">{project.title}</h3>
+                  <p className="text-sm text-muted-foreground">{project.description}</p>
         </div>
-      </header>
-      <main className="flex-1 container py-12">
-        <div className="flex justify-between items-center mb-8">
-          <h1 className="text-3xl font-bold">My Projects</h1>
-          <Link href="/dashboard/projects/new">
-            <Button>
-              <PlusIcon className="h-4 w-4 mr-2" />
-              New Project
-            </Button>
-          </Link>
+                <span className={`px-2 py-1 rounded-full text-xs ${
+                  project.status === "completed" ? "bg-green-100 text-green-800" :
+                  project.status === "in_progress" ? "bg-blue-100 text-blue-800" :
+                  "bg-yellow-100 text-yellow-800"
+                }`}>
+                  {project.status}
+                </span>
         </div>
-        {projects.length === 0 ? (
-          <div className="text-center py-12">
-            <h2 className="text-xl font-medium mb-4">You don&apos;t have any projects yet</h2>
-            <p className="text-gray-500 mb-6">Create your first project to get started</p>
-            <Link href="/dashboard/projects/new">
-              <Button>
-                <PlusIcon className="h-4 w-4 mr-2" />
-                Create Project
-              </Button>
-            </Link>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {projects.map((project) => (
-              <ProjectCard
-                key={project.id}
-                project={project}
-                actions={
-                  <div className="flex gap-2 mt-4">
-                    <Link href={`/dashboard/projects/${project.id}/edit`}>
-                      <Button variant="outline" size="sm">
-                        Edit
-                      </Button>
-                    </Link>
-                    <Link href={`/dashboard/projects/${project.id}/delete`}>
-                      <Button variant="destructive" size="sm">
-                        Delete
-                      </Button>
-                    </Link>
-                  </div>
-                }
-              />
             ))}
           </div>
-        )}
-      </main>
-      <footer className="w-full border-t py-6">
-        <div className="container flex flex-col md:flex-row justify-between items-center gap-4 md:gap-0">
-          <p className="text-sm text-gray-500 dark:text-gray-400">
-            © {new Date().getFullYear()} Portfolio. All rights reserved.
-          </p>
-          <div className="flex items-center gap-4">
-            <Link href="/about" className="text-sm text-gray-500 hover:underline dark:text-gray-400">
-              About
-            </Link>
-            <Link href="/contact" className="text-sm text-gray-500 hover:underline dark:text-gray-400">
-              Contact
-            </Link>
+        </Card>
+
+        {/* Recent Tasks */}
+        <Card className="p-6">
+          <h2 className="text-xl font-semibold mb-4">Recent Tasks</h2>
+          <div className="space-y-4">
+            {(recentTasks || []).map((task) => (
+              <div key={task.id} className="flex items-center justify-between">
+                <div>
+                  <h3 className="font-medium">{task.title}</h3>
+                  <p className="text-sm text-muted-foreground">{task.description}</p>
+                </div>
+                <span className={`px-2 py-1 rounded-full text-xs ${
+                  task.status === "completed" ? "bg-green-100 text-green-800" :
+                  task.status === "in_progress" ? "bg-blue-100 text-blue-800" :
+                  "bg-yellow-100 text-yellow-800"
+                }`}>
+                  {task.status}
+                </span>
+                  </div>
+            ))}
           </div>
+        </Card>
+      </div>
+
+      {/* Recent Activity */}
+      <Card className="p-6">
+        <h2 className="text-xl font-semibold mb-4">Recent Activity</h2>
+        <div className="space-y-4">
+          {(stats?.recent_activities || []).map((activity, index) => (
+            <div key={index} className="flex items-start space-x-4">
+              <div className="flex-1">
+                <p className="text-sm">{activity.message}</p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  {activity.timestamp ? new Date(activity.timestamp).toLocaleString() : ''}
+                </p>
+              </div>
+          </div>
+          ))}
         </div>
-      </footer>
+      </Card>
     </div>
   )
 }
